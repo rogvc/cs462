@@ -9,7 +9,7 @@ ruleset hello_world {
     shares hello
   }
 
-  global {
+  global  {
     hello = function(obj) {
       msg = "Hello " + obj;
       msg
@@ -20,5 +20,5 @@ ruleset hello_world {
     select when echo hello
     send_directive("say", {"something": "Hello World"})
   }
-  
+
 }
