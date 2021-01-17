@@ -11,7 +11,7 @@ Also, when I ran the `krl-compiler --verify` command, I got an error saying: `Pa
 
 <br/>
 
-![The error](https://raw.github.com/rogvc/cs462/blob/master/parse-error.png)
+![The error](https://github.com/rogvc/cs462/blob/master/lab0/pictures/parse-error.png?raw=true)
 
 <br/>
 
