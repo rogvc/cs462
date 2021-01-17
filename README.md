@@ -1,5 +1,13 @@
 # Lab 0
 
+## Screencast:
+
+<br/>
+
+![Demo](https://github.com/rogvc/cs462/blob/master/lab0/resources/screencast.mp4?raw=true)
+
+<br/>
+
 ## 1. What is the public URL of your hello_world ruleset?
 [hello_world.krl](https://raw.githubusercontent.com/rogvc/cs462/master/lab0/rulesets/hello_world.krl)
 
@@ -11,7 +19,7 @@ Also, when I ran the `krl-compiler --verify` command, I got an error saying: `Pa
 
 <br/>
 
-![The error](https://github.com/rogvc/cs462/blob/master/lab0/pictures/parse-error.png?raw=true)
+![The error](https://github.com/rogvc/cs462/blob/master/lab0/resources/parse-error.png?raw=true)
 
 <br/>
 
