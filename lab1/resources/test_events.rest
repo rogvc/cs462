@@ -1,0 +1,12 @@
+# This is the URL to trigger an event using my created channel
+GET http://localhost:3000/sky/event/ckka5bfz70007tdyj9u6t0yij/1556/echo/hello
+
+###
+
+# This is the URL to trigger an event using the engine-ui channel
+GET http://localhost:3000/sky/event/ckk0d1emj00047iyj6i8zgqwu/1556/echo/hello
+
+###
+
+# This is the URL to trigger a misspelled event using my created channel
+GET http://localhost:3000/sky/event/ckka7901u000ytdyj9g3mdf0j/1556/ecco/hello
