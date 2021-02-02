@@ -11,9 +11,9 @@ ruleset com.twilio.api {
 
     base_url = "https://api.twilio.com"
     
-    messages = function (recipient = "", sender = "", page_size = "") {
+    messages = function (recipient = null, sender = null, page_size = null) {
       query_string = 
-        {"To": recipient,"From": sender,"PageSize": page_size}
+         {"To": recipient || null, "From": sender || null, "PageSize": page_size || null}
       response = http:get(
         <<https://#{sid}:#{auth_token}@api.twilio.com/2010-04-01/Accounts/#{sid}/Messages.json>>,
         qs = query_string

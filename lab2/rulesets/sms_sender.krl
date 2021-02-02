@@ -9,7 +9,7 @@ ruleset sms_sender {
   }
 
   global {
-    get_messages = function (recipient = "", sender = "", page_size = "") {
+    get_messages = function (recipient = null, sender = null, page_size = null) {
       twilio:messages(recipient, sender, page_size)
     }
   }
