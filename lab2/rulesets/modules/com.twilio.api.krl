@@ -4,21 +4,20 @@ ruleset com.twilio.api {
     configure using
       sid = ""
       auth_token = ""
-    provides sendMessage
+    provides sendMessage, messages
   }
 
   global {
 
     base_url = "https://api.twilio.com"
     
-    messages = function (recipient, sender, page_size) {
+    messages = function (recipient = "", sender = "", page_size = "") {
+      query_string = 
+        {"To": recipient,"From": sender,"PageSize": page_size}
       response = http:get(
         <<https://#{sid}:#{auth_token}@api.twilio.com/2010-04-01/Accounts/#{sid}/Messages.json>>,
-        form = {
-          "To": recipient,
-          "From": sender, 
-          "PageSize": page_size
-        })
+        qs = query_string
+      )
       response{"content"}.decode()
     }
 

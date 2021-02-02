@@ -4,6 +4,14 @@ ruleset sms_sender {
       with
         sid = meta:rulesetConfig{"sid"}
         auth_token = meta:rulesetConfig{"auth_token"}
+    
+    shares get_messages
+  }
+
+  global {
+    get_messages = function (recipient = "", sender = "", page_size = "") {
+      twilio:messages(recipient, sender, page_size)
+    }
   }
 
   rule send_message {
