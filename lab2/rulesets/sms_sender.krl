@@ -4,13 +4,6 @@ ruleset sms_sender {
       with
         sid = meta:rulesetConfig{"sid"}
         auth_token = meta:rulesetConfig{"auth_token"}
-    shares byu
-  }
-
-  global {
-    byu = function() {
-      twilio:byu()
-    }
   }
 
   rule send_message {

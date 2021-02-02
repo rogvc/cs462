@@ -4,24 +4,36 @@ ruleset com.twilio.api {
     configure using
       sid = ""
       auth_token = ""
-    provides sendMessage, byu
+    provides sendMessage
   }
 
   global {
 
     base_url = "https://api.twilio.com"
-    byu = function() {
-      response = http:get("https://byu.edu")
+    
+    messages = function (recipient, sender, page_size) {
+      response = http:get(
+        <<https://#{sid}:#{auth_token}@api.twilio.com/2010-04-01/Accounts/#{sid}/Messages.json>>,
+        form = {
+          "To": recipient,
+          "From": sender, 
+          "PageSize": page_size
+        })
       response{"content"}.decode()
     }
+
     sendMessage = defaction(recipient, sender, message) {
-      auth_string = <<#{sid}: #{auth_token}>>
-      http:post(<<#{base_url}/2010-04-01/Accounts/#{sid}/Messages.json>>,form = {"To": recipient,"From": sender, "Body": message},auth = auth_string) setting(response)
-      return response
+      http:post(
+        <<https://#{sid}:#{auth_token}@api.twilio.com/2010-04-01/Accounts/#{sid}/Messages.json>>,
+        form = {
+          "To": recipient,
+          "From": sender, 
+          "Body": message
+        }) setting(response)
     }
   }
 
-  rule test_send {
+  rule test_send_a_message {
     select when test send_a_message
     pre {
       recipient = event:attrs{"To"}
