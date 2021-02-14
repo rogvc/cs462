@@ -6,6 +6,8 @@ ruleset wovyn_base {
         auth_token = meta:rulesetConfig{"auth_token"}
     
     configure using
+      notification_sender_number = meta:rulesetConfig{"notification_sender_number"}
+      notification_recipient_number = meta:rulesetConfig{"notification_recipient_number"}
       temperature_threshold = meta:rulesetConfig{"temperature_threshold"}
   }
 
@@ -50,6 +52,6 @@ ruleset wovyn_base {
       timestamp = event:attrs{"timestamp"}
     }
     if temperature && timestamp then
-      twilio:sendMessage("+18016716928", "+18018892129", <<Temperature #{temperature}F was too high. Reading happened at #{timestamp}>>) setting(response)
+      twilio:sendMessage(<<#{notification_recipient_number}>>, <<#{notification_sender_number}>>, <<Temperature #{temperature}F was too high. Reading happened at #{timestamp}>>) setting(response)
   }
 }
