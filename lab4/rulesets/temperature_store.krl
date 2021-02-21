@@ -1,7 +1,7 @@
 ruleset temperature_store {
   meta {
-    shares temperatures, threshold_violations, in_range_temperatures
-    provides temperatures, threshold_violations, in_range_temperatures
+    shares temperatures, threshold_violations, in_range_temperatures, latest
+    provides temperatures, threshold_violations, in_range_temperatures, latest
   }
 
   global {
@@ -9,6 +9,7 @@ ruleset temperature_store {
       "queries": 
       [
         { "name": "__testing" },
+        { "name": "latest" },
         { "name": "temperatures" },
         { "name": "threshold_violations" },
         { "name": "in_range_temperatures" }
@@ -25,6 +26,10 @@ ruleset temperature_store {
 
     temperatures = function () {
       ent:temperature_log
+    }
+
+    latest = function () {
+      ent:latest_temperature
     }
 
     threshold_violations = function () {
@@ -50,6 +55,7 @@ ruleset temperature_store {
     always {
       ent:temperature_log := {}.klog("Initialized temperature_log")
       ent:violation_log := {}.klog("Initialized violation_log")
+      ent:latest_temperature := 0.0
     }
   }
 
@@ -63,6 +69,7 @@ ruleset temperature_store {
 
     always {
       ent:temperature_log{timestamp} := temperature
+      ent:latest_temperature := temperature
     }
   }
 
