@@ -31,7 +31,7 @@ ruleset sensor_profile {
     pre {
       name = event:attrs{"name"}
       location = event:attrs{"location"}
-      temperature_threshold = event:attrs{"temperature_threshold"}
+      temperature_threshold = event:attrs{"temperature_threshold"}.decode()
       notification_recipient = event:attrs{"notification_recipient"}
     }
     
