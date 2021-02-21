@@ -1,0 +1,53 @@
+@page "/full_temperature_log"
+@using Newtonsoft.Json
+
+<div class="row">
+  <h3>All Temperature readings:</h3>
+  <SfButton IconCss="e-btn-sb-icons oi oi-reload" CssClass="e-small e-round ml-3" IsPrimary="false"
+    @onclick="RefreshAllTemperaturesLog"></SfButton>
+</div>
+<SfListView DataSource="@AllTemperatureReadings">
+  <ListViewFieldSettings TValue="TemperatureReading" Id="Timestamp" Text="ToString"></ListViewFieldSettings>
+</SfListView>
+<br>
+
+@code {
+
+  private TemperatureReading[] AllTemperatureReadings
+  {
+    get => allPicoTemperatures.ToArray();
+  }
+
+  private List<TemperatureReading> allPicoTemperatures = new List<TemperatureReading>();
+
+
+  protected override void OnAfterRender(bool firstRender)
+  {
+    if (firstRender)
+    {
+      RefreshAllTemperaturesLog();
+    }
+  }
+
+  private async void RefreshAllTemperaturesLog()
+  {
+    using var client = new HttpClient();
+
+    var response = await
+      client.GetStringAsync("http://localhost:3000/sky/cloud/ckl4m66oz008it3yjbwjqgr3c/temperature_store/temperatures");
+
+    
+    var jsonBody = JsonConvert.DeserializeObject<Dictionary<string, double>>(response);
+
+    foreach (var entry in jsonBody)
+    {
+      var tempReading = new TemperatureReading(
+        timestamp: entry.Key,
+        temperature: entry.Value.ToString()
+        );
+      allPicoTemperatures.Add(tempReading);
+    }
+
+    StateHasChanged();
+  }
+}

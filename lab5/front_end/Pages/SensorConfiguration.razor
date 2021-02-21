@@ -1,3 +1,82 @@
 @page "/sensor_configuration"
+@using Newtonsoft.Json
 
-<h1>Sensor and Profile Configuration</h1>
+<h3>Sensor and Profile Configuration</h3>
+
+<div class="m-3">
+  <h6>Name</h6>
+  <input type="text" @bind-value="@Name">
+</div>
+
+<div class="m-3">
+  <h6>Location</h6>
+  <input type="text" @bind-value="@Location">
+  <br>
+</div>
+
+<div class="m-3">
+  <h6>Temperature Threshold</h6>
+  <input type="number" @bind-value="@TemperatureThreshold">
+  <br>
+</div>
+
+<div class="m-3">
+  <h6>NotificationRecipient</h6>
+  <input type="text" @bind-value="@NotificationRecipient">
+  <br>
+</div>
+
+<div class="m-3">
+  <SfButton CssClass="e-primary" @onclick="SubmitNewProfile">Submit Changes</SfButton>
+</div>
+
+<div class="m-3">
+  <SfButton CssClass="e-danger" @onclick="ClearTemperatureHistory">Clear Temperature History</SfButton>
+</div>
+
+@code {
+  private string Name { get; set; }
+  private string Location { get; set; }
+  private double TemperatureThreshold { get; set; }
+  private string NotificationRecipient { get; set; }
+
+  protected override void OnAfterRender(bool firstRender)
+  {
+    if (firstRender)
+    {
+      GetCurrentConfiguration();
+    }
+  }
+
+  private async void GetCurrentConfiguration()
+  {
+    using var client = new HttpClient();
+
+    var response = await
+      client.GetStringAsync("http://localhost:3000/sky/cloud/ckl4m66oz008it3yjbwjqgr3c/sensor_profile/get_profile");
+
+    var jsonBody = JsonConvert.DeserializeObject<Dictionary<string, string>>(response);
+    Name = jsonBody["name"];
+    Location = jsonBody["location"];
+    TemperatureThreshold = Double.Parse(jsonBody["temperature_threshold"]);
+    NotificationRecipient = jsonBody["notification_recipient"];
+
+    StateHasChanged();
+  }
+
+  private async void SubmitNewProfile() {
+    using var client = new HttpClient();
+    //var newProfile = 
+    //    $"{{\"name\":\"{Name}\",\"location\":\"{Location}\",\"temperature_threshold\":{TemperatureThreshold},\"notification_recipient\":\"{NotificationRecipient}\"}}";
+    
+    await client.GetAsync($"http://localhost:3000/sky/event/ckl4m66oz008it3yjbwjqgr3c/sensor_profile/sensor/profile_updated?name={Name}&location={Location}&temperature_threshold={TemperatureThreshold}&notification_recipient=%2b{NotificationRecipient}");
+  } 
+
+  private async void ClearTemperatureHistory() {
+    using var client = new HttpClient();
+    //var newProfile = 
+    //    $"{{\"name\":\"{Name}\",\"location\":\"{Location}\",\"temperature_threshold\":{TemperatureThreshold},\"notification_recipient\":\"{NotificationRecipient}\"}}";
+    
+    await client.GetAsync($"http://localhost:3000/sky/event/ckl4m66oz008it3yjbwjqgr3c/temperature_store/sensor/reset");
+  } 
+}

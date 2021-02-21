@@ -13,12 +13,28 @@
             </NavLink>
         </li>
         <li class="nav-item px-3">
+            <NavLink class="nav-link" href="full_temperature_log">
+                <span class="oi oi-book" aria-hidden="true"></span> Temperature History
+            </NavLink>
+        </li>
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" href="ok_temperature_log">
+                <span class="oi oi-circle-check" aria-hidden="true"></span> OK Temperatures
+            </NavLink>
+        </li>
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" href="violation_temperature_log">
+                <span class="oi oi-warning" aria-hidden="true"></span> Violations History
+            </NavLink>
+        </li>
+        <li class="nav-item px-3">
             <NavLink class="nav-link" href="sensor_configuration">
                 <span class="oi oi-sun" aria-hidden="true"></span> Configure Sensor
             </NavLink>
         </li>
     </ul>
 </div>
+
 
 @code {
     private bool collapseNavMenu = true;

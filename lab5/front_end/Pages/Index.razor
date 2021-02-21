@@ -1,8 +1,54 @@
 ﻿@page "/"
+@using Newtonsoft.Json
 
-<h1>Temperature Logger</h1>
+<h2>Wovyn Sensor Temperature Logger 🌡</h2>
+<br>
 
+<div class="row">
+  <h4 class="ml-5">Currently, it's @CurrentTemperature&#176 F</h4>
+  <SfButton IconCss="e-btn-sb-icons oi oi-reload" CssClass="e-small e-round ml-3" IsPrimary="false"
+    @onclick="RefreshTemperature"></SfButton>
+</div>
+<br>
 
 @code {
-  private double currentTemperature = 0.0;
+  private float CurrentTemperature
+  {
+    get
+    {
+      return MathF.Round(latestTemperature);
+    }
+    set
+    {
+      latestTemperature = value;
+      StateHasChanged();
+    }
+  }
+  private float latestTemperature = 0.0f;
+
+  protected override void OnAfterRender(bool firstRender)
+  {
+    if (firstRender)
+    {
+      RefreshTemperature();
+    }
+
+  }
+
+  private async void RefreshTemperature()
+  {
+    using var client = new HttpClient();
+
+    var response = await
+      client.GetStringAsync("http://localhost:3000/sky/cloud/ckl4m66oz008it3yjbwjqgr3c/temperature_store/latest");
+    try
+    {
+      CurrentTemperature = (float)Double.Parse(response);
+    }
+    catch (Exception e)
+    {
+      Console.WriteLine(e.ToString());
+      CurrentTemperature = -1.0f;
+    }
+  }
 }
