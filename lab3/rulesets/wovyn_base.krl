@@ -7,8 +7,37 @@ ruleset wovyn_base {
     
     configure using
       notification_sender_number = meta:rulesetConfig{"notification_sender_number"}
-      notification_recipient_number = meta:rulesetConfig{"notification_recipient_number"}
-      temperature_threshold = meta:rulesetConfig{"temperature_threshold"}
+    shares get_config  
+  }
+
+  global {
+    get_config = function () {
+      {
+        "sender_number": notification_sender_number,
+        "recipient_number": ent:notification_recipient,
+        "temperature_threshold": ent:temperature_threshold,
+      }
+    }
+  }
+
+  rule init {
+    select when wrangler ruleset_installed where event:attrs{"rids"} >< ctx:rid
+    always {
+      ent:notification_recipient := meta:rulesetConfig{"notification_recipient_number"}.klog("Sending messages to this number")
+      ent:temperature_threshold := meta:rulesetConfig{"temperature_threshold"}.klog("Temperature threshold")
+    }
+  }
+
+  rule set_sensor_configuration {
+    select when wovyn config
+    pre {
+      notification_recipient = event:attrs{"notification_recipient_number"}.klog("New recipient number")
+      temperature_threshold = event:attrs{"temperature_threshold"}.klog("New temperature threshold")
+    }
+    always {
+      ent:notification_recipient := notification_recipient
+      ent:temperature_threshold := temperature_threshold
+    }
   }
 
   rule process_heartbeat {
@@ -41,7 +70,7 @@ ruleset wovyn_base {
           "temperature": temperature,
           "timestamp": timestamp
         }
-      if temperature > temperature_threshold
+      if temperature > ent:temperature_threshold
     }
   }
 
@@ -49,9 +78,9 @@ ruleset wovyn_base {
     select when wovyn threshold_violation
     pre {
       temperature = event:attrs{"temperature"}.klog("Firing notification with temperature")
-      timestamp = event:attrs{"timestamp"}
+      timestamp = event:attrs{"timestamp"}.klog("Timing")
     }
     if temperature && timestamp then
-      twilio:sendMessage(<<#{notification_recipient_number}>>, <<#{notification_sender_number}>>, <<Temperature #{temperature}F was too high. Reading happened at #{timestamp}>>) setting(response)
+      twilio:sendMessage(<<#{ent:notification_recipient_number}>>, <<#{notification_sender_number}>>, <<Temperature #{temperature}F was too high. Reading happened at #{timestamp}>>) setting(response)
   }
 }
