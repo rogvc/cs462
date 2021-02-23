@@ -1,6 +1,7 @@
 ruleset sensor_profile {
   meta {
     shares get_profile
+    provides get_profile
   }
 
   global {
