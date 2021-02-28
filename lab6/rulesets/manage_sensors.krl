@@ -163,7 +163,7 @@ ruleset manage_sensors {
         "attrs": {
           "absoluteURL": meta:rulesetURI,
           "rid": "com.twilio.api",
-          "config": {"sid":"ACadaff6b9168f457f852363e5f6f09e0a","auth_token":"fe537ab9b06a5314eb10a9ff4a083ead","temperature_threshold":80.3,"notification_sender_number":"+18018892129","notification_recipient_number":"+18016716928"}
+          "config": {"sid":"","auth_token":"","temperature_threshold":80.3,"notification_sender_number":"+18018892129","notification_recipient_number":"+18016716928"}
         }
       }
     )
