@@ -10,7 +10,7 @@ Unfortunately, my computer my desktop is still struggling with its GPU and my la
 
 ## Rulesets URLs:
 
-[All rulesets can be found here](https://raw.githubusercontent.com/rogvc/cs462/master/lab7/rulesets)
+[All rulesets can be found here](https://github.com/rogvc/cs462/tree/master/lab7/rulesets)
 
 ### 1. Why might an auto-approval rule for subscriptions be considered insecure? 
 Because any subscription request, from anyone in the web will be automatically accepted, allowing malicious users to have access to our system.
