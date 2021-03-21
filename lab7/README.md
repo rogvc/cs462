@@ -2,7 +2,7 @@
 
 ## Screencast:
 
-Unfortunately, my computer my desktop is still struggling with its GPU and my laptop doesn't have the hardware to handle everything going on at once.
+Unfortunately, my desktop is still struggling with its GPU and my laptop doesn't have the hardware to handle everything going on at once.
 
 ## Diagram:
 
