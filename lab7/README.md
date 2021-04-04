@@ -2,7 +2,7 @@
 
 ## Screencast:
 
-Unfortunately, my desktop is still struggling with its GPU and my laptop doesn't have the hardware to handle everything going on at once.
+[View Screencast on YouTube](https://youtu.be/CsSebK7JqYw)
 
 ## Diagram:
 

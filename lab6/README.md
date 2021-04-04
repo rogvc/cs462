@@ -2,7 +2,7 @@
 
 ## Screencast:
 
-Unfortunately, my computer could not record the screencast this time around. I'm running into issues with my graphics card on my desktop and my laptop doesn't have the hardware to handle everything going on at once.
+[View Screencast on YouTube](https://youtu.be/KSwoO8SP1tE)
 
 ## Diagram:
 
