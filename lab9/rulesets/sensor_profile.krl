@@ -91,7 +91,7 @@ ruleset sensor_profile {
     }
 
     prepare_gossip = function (sub) {
-      g = random:integer(10) < 6 => prepare_rumor(sub) | prepare_seen(sub)
+      g = random:integer(10) < 3 => prepare_rumor(sub) | prepare_seen(sub)
       temp = g{"gossip"}.isnull() => prepare_seen(sub) | g
       temp
     }
@@ -126,200 +126,14 @@ ruleset sensor_profile {
 
     new_rumor = function (temperature) {
       {
-        "message_id": wrangler:picoId + ":" + ent:my_sequence,
-        "sensor_id": wrangler:picoId,
+        "message_id": wrangler:myself(){"id"} + ":" + ent:my_sequence,
+        "sensor_id": wrangler:myself(){"id"},
         "temperature": temperature,
         "timestamp": time:now()
       }
     }
 
 
-  }
-
-  rule config {
-    select when sensor standalone_config
-    pre {
-      name = event:attrs{"name"}
-      location = event:attrs{"location"}
-      temp = event:attrs{"temperature_threshold"}
-    }
-
-    always {
-      ent:id := random:uuid()
-      ent:name := name
-      ent:location := location
-      ent:temperature_threshold := temp
-      ent:notification_recipient := ""
-    }
-  }
-
-  rule init {
-    select when wrangler ruleset_installed where event:attrs{"rids"} >< ctx:rid
-
-    pre {
-      name = event:attrs{"name"}
-      eci = wrangler:myself(){"eci"}
-      parent_eci = wrangler:parent_eci()
-      wellKnown_eci = subs:wellKnown_Rx(){"id"}
-    }
-
-    always {
-      ent:id := random:uuid()
-      ent:name := "Gossiper " + random:word() 
-      ent:location := "Bedroom"
-      ent:temperature_threshold := 80
-      ent:notification_recipient := ""
-      ent:manager_eci := ""
-      ent:rumor_log := []
-      ent:my_sequence := 0
-      ent:latest := {}
-      ent:seen_log := {}
-      // ent:message_count := 0
-      // ent:message_id := random:uuid().klog("message_id created")
-      ent:gossip_heartbeat_timer := 15
-      ent:processor := "yep"
-
-      schedule gossip event "heartbeat" at time:add(time:now(), {"minutes": 3})
-    }
-  }
-
-  rule prepare_for_subscription {
-    select when sensor create_subscription_channel
-
-    if ent:sensor_eci.isnull() then
-      wrangler:createChannel(tags, eventPolicy, queryPolicy) setting(channel)
-    
-    fired {
-      ent:name := event:attrs{"name"}.klog("Entity Name: ")
-      ent:wellKnown_Rx := wrangler:parent_eci().klog("Entity WellKnown_Rx: ")
-      ent:sensor_eci := channel{"id"}.klog("Entity sensor_eci: ")
-
-      raise sensor event "new_subscription_request"
-    }
-  }
-
-  rule make_subscription {
-    select when sensor new_subscription_request
-    
-    event:send(
-      {
-        "eci": ent:wellKnown_Rx,
-        "domain": "wrangler",
-        "name": "subscription",
-        "attrs": {
-          "wellKnown_Tx": subs:wellKnown_Rx(){"id"},
-          "Rx_role": "sensory", "Tx_role": "sensor",
-          "name": ent:name+"-sensory", "channel_type":"subscription"
-        }
-      }
-    )
-  }
-
-  rule on_subscription_established {
-    select when wrangler subscription_added
-
-    pre {
-      role = event:attrs{"Rx_role"}.klog("Role: ")
-    }
-    
-    if (role == "sensor") then
-      event:send(
-        {
-          "eci": event:attrs{"Tx"},
-          "eid": "sign_me_up",
-          "domain": "sensor",
-          "type": "identify_subscription",
-          "attrs": {
-            "name": ent:name,
-            "eci": wrangler:myself(){"eci"}
-          }
-        }
-      )
-
-    always {
-      raise self event "register_manager"
-      attributes { "eci": event:attrs{"Tx"} }
-      if (role == "sensor")
-    }
-  }
-
-  rule register_sensor_manager {
-    select when self register_manager
-    always {
-      ent:manager_eci := event:attrs{"eci"}
-    }
-  }
-
-  rule auto_accept_subscriptions {
-    select when wrangler inbound_pending_subscription_added
-    fired {
-      raise wrangler event "pending_subscription_approval"
-        attributes event:attrs
-    }
-  }
-
-  rule update_profile {
-    select when sensor profile_updated
-
-    pre {
-      name = event:attrs{"name"}
-
-      location = event:attrs{"location"}
-      temperature_threshold = event:attrs{"temperature_threshold"}.decode()
-      notification_recipient = event:attrs{"notification_recipient"}
-
-    }
-
-    always {
-      ent:name := name
-      ent:location := location
-      ent:temperature_threshold := temperature_threshold
-      ent:notification_recipient := notification_recipient
-
-      raise wovyn event "config" attributes
-        {
-          "notification_recipient_number": ent:notification_recipient,
-          "temperature_threshold": ent:temperature_threshold
-        }
-    }
-
-  }
-
-  rule on_temperature_violation {
-    select when sensor notify_high_temperature
-    event:send(
-        {
-          "eci": ent:manager_eci,
-          "eid": "too_hot",
-          "domain": "sensor",
-          "type": "temperature_violation",
-          "attrs": event:attrs
-        }
-      )
-  }
-
-  rule report_temperatures_sg {
-    select when sensor temperature_report_send
-    pre {
-      report_id = event:attrs{"report_id"}
-      cid = event:attrs{"cid"}
-      temperatures = event:attrs{"temperatures"}
-    }
-    
-    event:send(
-      {
-        "eci": ent:manager_eci,
-        "eid": "temperature_report",
-        "domain": "sensor",
-        "type": "temperature_report_response",
-        "attrs": {
-          "name": ent:name,
-          "report_id": report_id,
-          "cid": cid,
-          "temperatures": temperatures
-        }
-      }
-    )
   }
 
   rule gossip_config {
@@ -349,7 +163,7 @@ ruleset sensor_profile {
       schedule gossip event "heartbeat" at time:add(time:now(), {"seconds": ent:gossip_heartbeat_timer})
         if processing() ==  "yep" && schedule:list().none(function (x) 
           {
-            x{"id"} == wrangler:picoId && x{"event"}{"type"} == "heartbeat"
+            x{"id"} == wrangler:myself(){"id"} && x{"event"}{"type"} == "heartbeat"
           })
     }
 
@@ -392,6 +206,7 @@ ruleset sensor_profile {
       pico = pid(mid)
       seq = sequence(mid)
     }
+    if ent:latest{pico} then noop()
     
     fired {
       ent:latest{pico} := -1
@@ -426,21 +241,20 @@ ruleset sensor_profile {
     }
     
     always {
-      ent:seen_log{tx} := {} if role == "gossiper"
+      ent:seen_log{tx} := {} if role != "gossiper"
     }
 
   }
   
-  rule new_local_temp_reading {
+  rule new_temp_reading {
     select when wovyn heartbeat
     pre {
-      attrs = event:attrs.klog("attributes.")
-      temperature = event:attrs{"genericThing"}{"data"}{"temperature"}{"temperatureF"}
+      temperature = event:attrs{"genericThing"}{"data"}{"temperature"}[0]{"temperatureF"}.klog("Temperature!")
       g = new_rumor(temperature)
     }
     always{
       ent:rumor_log := ent:rumor_log.append(g)
-      ent:latest{wrangler:picoId} := proper_sequence(wrangler:picoId)
+      ent:latest{wrangler:myself(){"id"}} := proper_sequence(wrangler:myself(){"id"})
       ent:my_sequence := ent:my_sequence + 1
     }
   }
