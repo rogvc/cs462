@@ -3,9 +3,17 @@ ruleset gossip_manager {
     use module io.picolabs.subscription alias subs
     use module io.picolabs.wrangler alias wrangler
 
-    shares show_rumor_log, show_seen_log, show_latest_data, show_is_active
+    shares show_threshold, show_in_violation, show_nodes_violation, show_rumor_log, show_seen_log, show_latest_data, show_is_active
   }
   global {
+    show_threshold = function () {
+      ent:temperature_threshold
+    }
+
+    show_in_violation = function () {
+      ent:in_violation
+    }
+
     show_nodes_violation = function () {
       ent:violation_counter
     }
@@ -77,11 +85,22 @@ ruleset gossip_manager {
     }
         
     create_gossip = function (subscriber) {
-      message = random:integer(10) < 6 => create_rumor(subscriber) | create_seen(subscriber)
+      r = random:integer(0, 10)
+      message = r < 3 
+        => create_rumor(subscriber) 
+        | r > 6 => create_seen(subscriber) | create_violation_rumor(subscriber)
       m = message{"message"}.isnull() => create_seen(subscriber) | message
       m
     }
     
+    create_violation_rumor = function (subscriber) {
+      return {
+        "message": ent:violation_val,
+        "type": "violation",
+        "sender": subscriber
+      }
+    }
+
     create_rumor = function (subscriber) {
       missing = state_of(ent:seen_log{subscriber{"Tx"}})
       return { 
@@ -134,6 +153,7 @@ ruleset gossip_manager {
         ent:violation_counter := 0
         ent:temperature_threshold := random:integer(75, 85)
         ent:in_violation := false
+        ent:violation_val := 0
         schedule gossip event "heartbeat" at time:add(time:now(), {"seconds": 5}).klog("Scheduling Gossip Heartbeat...")
     }
   }
@@ -236,6 +256,17 @@ ruleset gossip_manager {
       ent:seen_log{sender} := message
     }
   }
+
+  rule on_gossip_violation {
+    select when gossip violation where ent:is_active == "yep"
+    pre {
+      sender = event:attrs{"sender"}{"Rx"}
+      message = event:attrs{"message"}
+    }
+    always {
+      ent:violation_counter := ent:violation_counter + message
+    }
+  }
   
   rule on_gossiper_subscription_added {
     select when wrangler subscription_added
@@ -281,10 +312,21 @@ ruleset gossip_manager {
       ent:rumor_log := ent:rumor_log.append(message)
       ent:latest_data{wrangler:myself(){"id"}} := proper_sequence_of(wrangler:myself(){"id"})
       ent:my_sequence := ent:my_sequence + 1
-      raise gossip event "manage_violation" attributes
+      raise gossip event "violation_check" attributes
       {
         "temperature": temperature
       }
+    }
+  }
+
+  rule on_new_threshold {
+    select when gossip new_threshold
+    pre {
+      threshold = event:attrs{"threshold"}
+    }
+
+    always {
+      ent:temperature_threshold := threshold
     }
   }
 
@@ -296,10 +338,35 @@ ruleset gossip_manager {
     }
 
     always {
-      raise gossip event new_violation
-        attributes {
-          
-        } if (is_violation && not ent:in_violation)
+      raise gossip event "new_violation" if (is_violation && not ent:in_violation).klog("Should schedule new violation")
+      raise gossip event "cancel_violation" if (not is_violation && ent:in_violation).klog("Should schedule cancel violation")
+      raise gossip event "same_violation" if (is_violation == ent:in_violation).klog("Should schedule same violation")
     }    
   }
+
+  rule on_new_violation {
+    select when gossip new_violation
+    always {
+      ent:in_violation := true
+      ent:violation_val := 1
+      ent:violation_counter := ent:violation_counter + 1
+    }
+  }
+
+  rule on_cancel_violation {
+    select when gossip cancel_violation
+    always {
+      ent:in_violation := false
+      ent:violation_val := -1
+      ent:violation_counter := ent:violation_counter - 1
+    }
+  }
+
+  rule on_same_violation {
+    select when gossip same_violation
+    always {
+      ent:violation_val := 0
+    }
+  }
+
 }
